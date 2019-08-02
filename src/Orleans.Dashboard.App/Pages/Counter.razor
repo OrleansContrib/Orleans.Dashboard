@@ -1,0 +1,29 @@
+﻿@page "/counter"
+@inject IClusterClient _clusterClient
+
+<h1>Counter</h1>
+
+<p>Current count: @currentCount</p>
+<ol>
+    @foreach (var item in this._silos)
+    {
+        <li>
+            <p>Silo: @item.Key</p>
+            <p>Status: @item.Value</p>
+        </li>
+    }
+</ol>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    int currentCount = 0;
+    Dictionary<SiloAddress, SiloStatus> _silos = new Dictionary<SiloAddress, SiloStatus>();
+
+    async Task IncrementCount()
+    {
+        var mgm = this._clusterClient.GetGrain<IManagementGrain>(0);
+        this._silos = await mgm.GetHosts();
+        currentCount++;
+    }
+}

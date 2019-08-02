@@ -1,0 +1,32 @@
+﻿@page "/"
+@namespace Orleans.Dashboard
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orleans Dashboard</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <base href="~/" />
+    <link rel="stylesheet" href="_content/Orleans.Dashboard.App/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="_content/Orleans.Dashboard.App/css/site.css"/>
+    <link rel="stylesheet" href="_content/Orleans.Dashboard.App/lib/open-iconic/font/css/open-iconic-bootstrap.min.css"/>
+    <link rel="stylesheet" href="_content/Orleans.Dashboard.App/css/animate.css"/>
+    <link rel="stylesheet" href="~/_content/Orleans.Dashboard.App/css/style.css" asp-append-version="true"/>
+</head>
+<body>
+    <app>@(await Html.RenderComponentAsync<OrleansDashboard>())</app>
+
+    <script src="_framework/blazor.server.js"></script>
+    <script src="~/_content/Orleans.Dashboard.App/lib/jquery/dist/jquery.js"></script>
+    <script src="~/_content/Orleans.Dashboard.App/lib/Popper/popper.min.js"></script>
+    <script src="~/_content/Orleans.Dashboard.App/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="~/_content/Orleans.Dashboard.App/lib/metisMenu/dist/jquery.metisMenu.js"></script>
+    <script src="~/_content/Orleans.Dashboard.App/lib/pace/pace.js"></script>
+    <script src="~/_content/Orleans.Dashboard.App/lib/slimScroll/jquery.slimscroll.js"></script>
+    <script src="~/_content/Orleans.Dashboard.App/js/script.js" asp-append-version="true"></script>
+    
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+    "folders": [
+        {
+            "name": "Host",
+            "path": "src/Orleans.Dashboard"
+        },
+        {
+            "name": "App",
+            "path": "src/Orleans.Dashboard.App"
+        },
+        {
+            "name": "TestSilo",
+            "path": "test/Orleans.Dashboard.TestSilo"
+        }
+    ],
+    "launch": {
+        "configurations": [],
+        "compounds": [
+            {
+                "name": "Test Silo",
+                "configurations": [ "TestSilo"]
+            }
+        ]
+    }
+}
