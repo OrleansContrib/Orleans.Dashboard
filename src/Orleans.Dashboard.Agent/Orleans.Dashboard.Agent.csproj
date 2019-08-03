@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Orleans.Dashboard</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Threading.Channels" Version="4.6.0-preview7.19362.9" />
+    <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="2.3.6" />
+    <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="2.3.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Buffers;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +17,6 @@ namespace Orleans.Dashboard.TestSilo
             var host = new HostBuilder()
                 .ConfigureAppConfiguration((hostContext, configApp) =>
                 {
-                    // configApp.SetBasePath(Directory.GetCurrentDirectory());
                     configApp.AddJsonFile("appsettings.json", optional: true);
                     configApp.AddJsonFile(
                         $"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json",
@@ -38,7 +35,11 @@ namespace Orleans.Dashboard.TestSilo
                         {
                             opt.ClusterId = opt.ServiceId = "OrleansDashboard-Cluster-Test";
                         })
+                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(Program).Assembly))
+                        .AddDashboardAgent()
                         .AddMemoryGrainStorage("PubSubStore")
+                        .AddStartupTask<TestStart>()
+                        .UseInMemoryReminderService()
                         .AddMemoryGrainStorageAsDefault();
                 })
                 .AddOrleansDashboard()
