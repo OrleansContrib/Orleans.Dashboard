@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace Orleans.Dashboard.Reports.Logging
@@ -12,27 +11,22 @@ namespace Orleans.Dashboard.Reports.Logging
         private const string PROVIDER_ALIAS = "Orleans.Dashboard";
 
         private readonly AgentLoggerOptions _options;
-        private readonly Func<IAgentService> _agentFactory;
+        private readonly IAgentMessageWriter _messageWriter;
         private IExternalScopeProvider _externalScopeProvider;
         private readonly ConcurrentDictionary<string, AgentLogger> _loggers;
 
-        public AgentLoggerProvider(IOptions<AgentLoggerOptions> options, Func<IAgentService> agentFactory)
+        public AgentLoggerProvider(IOptions<AgentLoggerOptions> options, IAgentMessageWriter writer)
         {
             this._options = options?.Value ?? throw new ArgumentNullException(nameof(AgentLoggerOptions));
-            this._agentFactory = agentFactory;
+            this._messageWriter = writer;
             this._loggers = new ConcurrentDictionary<string, AgentLogger>();
         }
 
         public ILogger CreateLogger(string categoryName)
         {
-            if (categoryName == nameof(AgentService))
-            {
-                return NullLogger.Instance;
-            }
-
             return this._loggers.GetOrAdd(
                 categoryName,
-                key => new AgentLogger(categoryName, this._options, this._agentFactory)
+                key => new AgentLogger(categoryName, this._options, this._messageWriter)
                 {
                     ExternalScopeProvider = this._externalScopeProvider
                 });

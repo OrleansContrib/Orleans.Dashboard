@@ -1,5 +1,4 @@
 using System;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Orleans.Dashboard.Reports.Logging
@@ -8,12 +7,11 @@ namespace Orleans.Dashboard.Reports.Logging
     {
         private readonly string _categoryName;
         private readonly AgentLoggerOptions _options;
-        private readonly Func<IAgentService> _agentFactory;
-        private IAgentService _agent;
+        private readonly IAgentMessageWriter _messageWriter;
 
-        public AgentLogger(string categoryName, AgentLoggerOptions options, Func<IAgentService> agentFactory)
+        public AgentLogger(string categoryName, AgentLoggerOptions options, IAgentMessageWriter writer)
         {
-            this._agentFactory = agentFactory;
+            this._messageWriter = writer;
             this._categoryName = categoryName;
             this._options = options;
         }
@@ -42,25 +40,7 @@ namespace Orleans.Dashboard.Reports.Logging
                     Content = formatter(state, exception)
                 };
 
-                if (this._categoryName == nameof(AgentService))
-                {
-                    var a = this._categoryName;
-                }
-
-                if (this._agent == null)
-                {
-                    try
-                    {
-                        this._agent = this._agentFactory();
-                        var aaa = 222;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex);
-                    }
-                }
-
-                this._agent.DispatchMessage(new ReportMessage { Type = ReportMessageType.Log, Payload = message });
+                this._messageWriter.Write(new ReportMessage { Type = ReportMessageType.Log, Payload = message });
             }
         }
     }

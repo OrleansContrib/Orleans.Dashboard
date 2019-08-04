@@ -12,33 +12,26 @@ namespace Orleans.Dashboard
 {
     internal class AgentService : IAgentService, ILifecycleParticipant<ISiloLifecycle>, IDisposable
     {
-        private readonly Channel<ReportMessage> _incomingMessages;
+        private readonly IAgentMessageReader _messageReader;
+        private readonly IAgentMessageWriter _messageWriter;
         private readonly ILocalSiloDetails _siloDetails;
         private readonly IGrainFactory _grainFactory;
-        // private readonly IServiceProvider _serviceProvider;
-
-        // private ILogger _logger;
+        private ILogger _logger;
         private bool _disposing;
         private Task _messagePump;
 
-        public AgentService(ILocalSiloDetails siloDetails, IGrainFactory grainFactory)//, IServiceProvider serviceProvider)
+        public AgentService(ILoggerFactory loggerFactory, ILocalSiloDetails siloDetails, IGrainFactory grainFactory, IAgentMessageReader reader, IAgentMessageWriter writer)
         {
             this._grainFactory = grainFactory;
             this._siloDetails = siloDetails;
-            // this._serviceProvider = serviceProvider;
-            this._incomingMessages = Channel.CreateUnbounded<ReportMessage>(new UnboundedChannelOptions
-            {
-                SingleReader = true,
-                SingleWriter = false,
-                AllowSynchronousContinuations = false,
-            });
+            this._logger = loggerFactory.CreateLogger(nameof(AgentService));
+            this._messageReader = reader;
+            this._messageWriter = writer;
         }
-
-        public void DispatchMessage(ReportMessage message) => this._incomingMessages.Writer.TryWrite(message);
 
         private async Task RunReportMessagePump(CancellationToken cancellationToken)
         {
-            var reader = this._incomingMessages.Reader;
+            var reader = this._messageReader.Reader;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -48,7 +41,7 @@ namespace Orleans.Dashboard
                     var more = moreTask.IsCompletedSuccessfully ? moreTask.Result : await moreTask;
                     if (!more)
                     {
-                        // this._logger.LogInformation($"{nameof(AgentService)} completed processing all messages.Shutting down.");
+                        this._logger.LogInformation($"{nameof(AgentService)} completed processing all messages.Shutting down.");
                         break;
                     }
 
@@ -60,7 +53,7 @@ namespace Orleans.Dashboard
                 }
                 catch (Exception exc)
                 {
-                    // this._logger.LogError("RunReportMessagePump has thrown an exception: {Exception}. Continuing.", exc);
+                    this._logger.LogError("RunReportMessagePump has thrown an exception: {Exception}. Continuing.", exc);
                 }
             }
         }
@@ -72,7 +65,7 @@ namespace Orleans.Dashboard
                 case ReportMessageType.Log:
                     return this.PushLog(message);
                 default:
-                    // this._logger.LogError("Message not supported: {Message}", message.Type);
+                    this._logger.LogError("Message not supported: {Message}", message.Type);
                     return Task.CompletedTask;
             }
         }
@@ -95,28 +88,26 @@ namespace Orleans.Dashboard
             {
                 if (cancellation.IsCancellationRequested) return Task.CompletedTask;
 
-                // this._logger = this._serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(AgentService));
-
-                // this._logger.LogInformation($"Initializing Orleans Dashboard Agent for '{this._siloDetails.Name} | {this._siloDetails.SiloAddress}'.");
+                this._logger.LogInformation($"Initializing Orleans Dashboard Agent for '{this._siloDetails.Name} | {this._siloDetails.SiloAddress}'.");
 
                 this._messagePump = Task.Run(() => this.RunReportMessagePump(cancellation));
 
-                // this._logger.LogInformation("Orleans Dashboard Agent initialized.");
+                this._logger.LogInformation("Orleans Dashboard Agent initialized.");
 
                 return Task.CompletedTask;
             }
 
             async Task OnStop(CancellationToken cancellation)
             {
-                // this._logger.LogInformation("Stopping Orleans Dashboard Agent.");
-                this._incomingMessages.Writer.TryComplete();
+                this._logger.LogInformation("Stopping Orleans Dashboard Agent.");
+                this._messageWriter.Writer.TryComplete();
 
                 if (this._messagePump != null)
                 {
                     await Task.WhenAny(cancellation.WhenCancelled(), this._messagePump);
                 }
 
-                // this._logger.LogInformation("Orleans Dashboard Agent Stopped.");
+                this._logger.LogInformation("Orleans Dashboard Agent Stopped.");
             }
         }
 
@@ -124,7 +115,7 @@ namespace Orleans.Dashboard
         {
             if (this._disposing) return;
             this._disposing = true;
-            Utils.SafeExecute(() => this._incomingMessages.Writer.TryComplete());
+            Utils.SafeExecute(() => this._messageWriter.Writer.TryComplete());
             Utils.SafeExecute(() => this._messagePump?.GetAwaiter().GetResult());
         }
     }

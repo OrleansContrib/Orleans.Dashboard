@@ -26,6 +26,9 @@ namespace Orleans.Dashboard
 
                 services
                     .Configure(configureAgentLoggerOptions)
+                    .AddSingleton<IAgentMessageBroker, AgentMessageBroker>()
+                    .AddSingleton<IAgentMessageReader>(sp => sp.GetRequiredService<IAgentMessageBroker>())
+                    .AddSingleton<IAgentMessageWriter>(sp => sp.GetRequiredService<IAgentMessageBroker>())
                     .AddSingleton<IIncomingGrainCallFilter, ProfileGrainInvocationFilter>()
                     .AddSingleton<IAgentService, AgentService>()
                     .AddSingleton<ILifecycleParticipant<ISiloLifecycle>>(sp =>
