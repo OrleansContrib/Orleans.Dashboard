@@ -1,17 +1,20 @@
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using Orleans.Dashboard.Reports;
 
 namespace Orleans.Dashboard
 {
     internal interface IAgentMessageWriter
     {
-        ChannelWriter<ReportMessage> Writer { get; }
         void Write(ReportMessage message);
+
+        void Complete();
     }
 
     internal interface IAgentMessageReader
     {
-        ChannelReader<ReportMessage> Reader { get; }
+        ValueTask<bool> HasMore();
+        bool Read(out ReportMessage message);
     }
 
     internal interface IAgentMessageBroker : IAgentMessageReader, IAgentMessageWriter { }
@@ -22,9 +25,13 @@ namespace Orleans.Dashboard
 
         public ChannelReader<ReportMessage> Reader => this._messages.Reader;
 
-        public ChannelWriter<ReportMessage> Writer => this._messages.Writer;
-
         public void Write(ReportMessage message) => this._messages.Writer.TryWrite(message);
+
+        public void Complete() => this._messages?.Writer?.TryComplete();
+
+        public ValueTask<bool> HasMore() => this._messages.Reader.WaitToReadAsync();
+
+        public bool Read(out ReportMessage message) => this._messages.Reader.TryRead(out message);
 
         public AgentMessageBroker()
         {

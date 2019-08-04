@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Orleans.Dashboard.Reports;
 using Orleans.Dashboard.Reports.Logging;
@@ -31,13 +29,11 @@ namespace Orleans.Dashboard
 
         private async Task RunReportMessagePump(CancellationToken cancellationToken)
         {
-            var reader = this._messageReader.Reader;
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var moreTask = reader.WaitToReadAsync();
+                    var moreTask = this._messageReader.HasMore();
                     var more = moreTask.IsCompletedSuccessfully ? moreTask.Result : await moreTask;
                     if (!more)
                     {
@@ -45,7 +41,7 @@ namespace Orleans.Dashboard
                         break;
                     }
 
-                    while (reader.TryRead(out var message))
+                    while (this._messageReader.Read(out var message))
                     {
                         if (message == null) continue;
                         await this.Push(message);
@@ -100,7 +96,7 @@ namespace Orleans.Dashboard
             async Task OnStop(CancellationToken cancellation)
             {
                 this._logger.LogInformation("Stopping Orleans Dashboard Agent.");
-                this._messageWriter.Writer.TryComplete();
+                this._messageWriter.Complete();
 
                 if (this._messagePump != null)
                 {
@@ -115,7 +111,7 @@ namespace Orleans.Dashboard
         {
             if (this._disposing) return;
             this._disposing = true;
-            Utils.SafeExecute(() => this._messageWriter.Writer.TryComplete());
+            Utils.SafeExecute(() => this._messageWriter?.Complete());
             Utils.SafeExecute(() => this._messagePump?.GetAwaiter().GetResult());
         }
     }
