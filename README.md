@@ -1,4 +1,14 @@
-# Orleans.Dashboard
+<p align="center">
+  <img src="https://github.com/dotnet/orleans/blob/gh-pages/assets/logo.png" alt="SignalR.Orleans" width="150px"> 
+  <h1>Orleans.Dashboard</h1>
+</p>
+
+[![Build Status](https://dotnet-ci.visualstudio.com/DotnetCI/_apis/build/status/Orleans-Dashboard-CI?branchName=master)](https://dotnet-ci.visualstudio.com/DotnetCI/_build/latest?definitionId=21&branchName=master)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
+[Orleans](https://github.com/dotnet/orleans) is a framework that provides a straight-forward approach to building distributed high-scale computing applications, without the need to learn and apply complex concurrency or other scaling patterns. 
+
+[Blazor](https://blazor.net) is a framework for building interactive client-side web UI with .NET.
 
 ## W.I.P.
 
