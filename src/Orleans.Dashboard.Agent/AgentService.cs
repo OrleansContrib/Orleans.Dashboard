@@ -2,29 +2,38 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Orleans.Configuration;
 using Orleans.Dashboard.Reports;
-using Orleans.Dashboard.Reports.Logging;
 using Orleans.Runtime;
 
 namespace Orleans.Dashboard
 {
-    internal class AgentService : IAgentService, ILifecycleParticipant<ISiloLifecycle>, IDisposable
+    internal class AgentService : ILifecycleParticipant<ISiloLifecycle>, IDisposable
     {
         private readonly IAgentMessageReader _messageReader;
         private readonly IAgentMessageWriter _messageWriter;
         private readonly ILocalSiloDetails _siloDetails;
         private readonly IGrainFactory _grainFactory;
+        private readonly ClusterOptions _clusterOptions;
         private ILogger _logger;
         private bool _disposing;
         private Task _messagePump;
 
-        public AgentService(ILoggerFactory loggerFactory, ILocalSiloDetails siloDetails, IGrainFactory grainFactory, IAgentMessageReader reader, IAgentMessageWriter writer)
+        public AgentService(
+            ILoggerFactory loggerFactory,
+            ILocalSiloDetails siloDetails,
+            IGrainFactory grainFactory,
+            IAgentMessageReader reader,
+            IAgentMessageWriter writer,
+            IOptions<ClusterOptions> clusterOptions)
         {
             this._grainFactory = grainFactory;
             this._siloDetails = siloDetails;
-            this._logger = loggerFactory.CreateLogger(nameof(AgentService));
+            this._logger = loggerFactory.CreateLogger<AgentService>();
             this._messageReader = reader;
             this._messageWriter = writer;
+            this._clusterOptions = clusterOptions.Value;
         }
 
         private async Task RunReportMessagePump(CancellationToken cancellationToken)
@@ -56,24 +65,23 @@ namespace Orleans.Dashboard
 
         private Task Push(ReportMessage message)
         {
-            switch (message.Type)
-            {
-                case ReportMessageType.Log:
-                    return this.PushLog(message);
-                default:
-                    this._logger.LogError("Message not supported: {Message}", message.Type);
-                    return Task.CompletedTask;
-            }
-        }
-
-        private Task PushLog(ReportMessage message)
-        {
-            var log = message.Payload as LogMessage;
-
-            //TODO: Forward to the dashboard services
-            // this._logger.Log(log.Level, log.Content);
+            var agentMessage = this.CreateAgentMessage(message);
+            // TODO: Push to Dashboard service
 
             return Task.CompletedTask;
+        }
+
+        private AgentMessage CreateAgentMessage(ReportMessage message)
+        {
+            return new AgentMessage
+            {
+                ClusterId = this._clusterOptions.ClusterId,
+                ServiceId = this._clusterOptions.ServiceId,
+                Message = message,
+                SiloAddress = this._siloDetails.SiloAddress.ToString(),
+                SiloName = this._siloDetails.Name,
+                DateTime = DateTime.UtcNow
+            };
         }
 
         public void Participate(ISiloLifecycle lifecycle)

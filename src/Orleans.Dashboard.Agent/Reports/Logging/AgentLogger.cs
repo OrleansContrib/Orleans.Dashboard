@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.Logging;
+using Orleans.Runtime;
 
 namespace Orleans.Dashboard.Reports.Logging
 {
@@ -39,6 +40,8 @@ namespace Orleans.Dashboard.Reports.Logging
                     EventId = eventId,
                     Content = formatter(state, exception)
                 };
+
+                var a = RequestContext.PropagateActivityId;
 
                 this._messageWriter.Write(new ReportMessage { Type = ReportMessageType.Log, Payload = message });
             }

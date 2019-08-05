@@ -8,6 +8,8 @@ namespace Orleans.Dashboard.Reports
 
     internal enum ReportMessageType
     {
-        Log = 0
+        Log = 0,
+        GrainMethodExecution = 1,
+        GrainMethodInvocation = 2
     }
 }
