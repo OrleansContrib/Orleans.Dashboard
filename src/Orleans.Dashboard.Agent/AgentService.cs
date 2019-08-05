@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -16,9 +17,12 @@ namespace Orleans.Dashboard
         private readonly ILocalSiloDetails _siloDetails;
         private readonly IGrainFactory _grainFactory;
         private readonly ClusterOptions _clusterOptions;
+        private readonly AgentOptions _agentOptions;
+        private readonly Queue<AgentMessage> _pendingMessages;
         private ILogger _logger;
         private bool _disposing;
         private Task _messagePump;
+        private DateTime _lastPush;
 
         public AgentService(
             ILoggerFactory loggerFactory,
@@ -26,7 +30,8 @@ namespace Orleans.Dashboard
             IGrainFactory grainFactory,
             IAgentMessageReader reader,
             IAgentMessageWriter writer,
-            IOptions<ClusterOptions> clusterOptions)
+            IOptions<ClusterOptions> clusterOptions,
+            IOptions<AgentOptions> agentOptions)
         {
             this._grainFactory = grainFactory;
             this._siloDetails = siloDetails;
@@ -34,6 +39,8 @@ namespace Orleans.Dashboard
             this._messageReader = reader;
             this._messageWriter = writer;
             this._clusterOptions = clusterOptions.Value;
+            this._agentOptions = agentOptions.Value;
+            this._pendingMessages = new Queue<AgentMessage>();
         }
 
         private async Task RunReportMessagePump(CancellationToken cancellationToken)
@@ -66,7 +73,21 @@ namespace Orleans.Dashboard
         private Task Push(ReportMessage message)
         {
             var agentMessage = this.CreateAgentMessage(message);
-            // TODO: Push to Dashboard service
+            this._pendingMessages.Enqueue(agentMessage);
+
+            if (this._pendingMessages.Count > 0 &&
+                (this._pendingMessages.Count >= this._agentOptions.MaxBatchSize ||
+                (DateTime.UtcNow - this._lastPush) >= this._agentOptions.MaxBatchInterval))
+            {
+                var batch = new AgentMessage[this._pendingMessages.Count];
+                for (int i = 0; i < batch.Length; i++)
+                {
+                    batch[i] = this._pendingMessages.Dequeue();
+                }
+
+                // TODO: Call dashboard grain to process batch
+                this._lastPush = DateTime.UtcNow;
+            }
 
             return Task.CompletedTask;
         }

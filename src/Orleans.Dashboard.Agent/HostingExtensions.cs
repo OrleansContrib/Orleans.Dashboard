@@ -12,11 +12,17 @@ namespace Orleans.Dashboard
     public static class HostingExtensions
     {
         public static ISiloBuilder AddDashboardAgent(this ISiloBuilder builder,
+            Action<AgentOptions> configureAgentOptions = null,
             Action<AgentLoggerOptions> configureAgentLoggerOptions = null,
             Action<AgentTrackingOptions> configureAgentTrackingOptions = null)
         {
             return builder.ConfigureServices((builderContext, services) =>
             {
+                if (configureAgentOptions == null)
+                {
+                    configureAgentOptions = opt => { };
+                }
+
                 if (configureAgentLoggerOptions == null)
                 {
                     configureAgentLoggerOptions = opt => { };
@@ -30,6 +36,7 @@ namespace Orleans.Dashboard
                 services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, AgentLoggerProvider>());
 
                 services
+                    .Configure(configureAgentOptions)
                     .Configure(configureAgentLoggerOptions)
                     .Configure(configureAgentTrackingOptions)
                     .AddSingleton<IAgentMessageBroker, AgentMessageBroker>()
