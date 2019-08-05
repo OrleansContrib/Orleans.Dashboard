@@ -1,40 +1,67 @@
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Orleans.Runtime;
-using System;
 using Microsoft.Extensions.Options;
+using Orleans.Runtime;
 
 namespace Orleans.Dashboard.Reports.Tracking
 {
-    internal sealed class GrainMethodInvocationFilter : IOutgoingGrainCallFilter
+    public interface IExternalDependencyTracker
+    {
+        Task<TResult> Track<TResult>(string name, Func<Activity, Task<TResult>> func);
+        Task Track(string name, Func<Activity, Task> func);
+    }
+
+    internal class ExternalDependencyTracker : IExternalDependencyTracker
     {
         private readonly IAgentMessageWriter _messageWriter;
         private readonly AgentTrackingOptions _options;
 
-        public GrainMethodInvocationFilter(IOptions<AgentTrackingOptions> options, IAgentMessageWriter writer)
+        public ExternalDependencyTracker(IAgentMessageWriter writer, IOptions<AgentTrackingOptions> options)
         {
             this._messageWriter = writer;
             this._options = options.Value;
         }
 
-        public async Task Invoke(IOutgoingGrainCallContext context)
+        public async Task<TResult> Track<TResult>(string name, Func<Activity, Task<TResult>> func)
         {
-            var grainInterface = context.InterfaceMethod.DeclaringType.FullName;
-            var methodName = context.InterfaceMethod.Name;
-            var grainKey = this.GetGrainPrimaryKey(context);
-            var grainId = context.Grain.ToString();
-
-            var activity = CreateActivity($"{grainInterface}.{methodName}")
-                .AddTag(Constants.GrainInterface, grainInterface)
-                .AddTag(Constants.IsSystemTarget, string.IsNullOrWhiteSpace(grainKey).ToString())
-                .AddTag(Constants.MethodName, methodName)
-                .AddTag(Constants.GrainPrimaryKey, grainKey)
-                .AddTag(Constants.GrainIdentity, grainId);
+            var activity = this.CreateActivity(name);
+            TResult result = default;
 
             try
             {
                 activity.Start();
-                await context.Invoke();
+                result = await func(activity);
+            }
+            catch (Exception exc)
+            {
+                activity.AddTag(Constants.ExceptionType, exc.GetType().FullName)
+                    .AddTag(Constants.ExceptionMessage, exc.Message)
+                    .AddTag(Constants.ExceptionSource, exc.Source)
+                    .AddTag(Constants.StackTrace, this._options.IncludeStackTrace ? exc.StackTrace : string.Empty);
+                throw exc;
+            }
+            finally
+            {
+                var completedActivity = this.FinishActivity(activity);
+                this._messageWriter.Write(new ReportMessage
+                {
+                    Type = ReportMessageType.ExternalDependencyTrack,
+                    Payload = completedActivity
+                });
+            }
+
+            return result;
+        }
+
+        public async Task Track(string name, Func<Activity, Task> func)
+        {
+            var activity = this.CreateActivity(name);
+
+            try
+            {
+                activity.Start();
+                await func(activity);
             }
             catch (Exception exc)
             {
@@ -49,7 +76,7 @@ namespace Orleans.Dashboard.Reports.Tracking
                 var completedActivity = this.FinishActivity(activity);
                 this._messageWriter.Write(new ReportMessage
                 {
-                    Type = ReportMessageType.GrainMethodInvocation,
+                    Type = ReportMessageType.ExternalDependencyTrack,
                     Payload = completedActivity
                 });
             }
@@ -74,19 +101,7 @@ namespace Orleans.Dashboard.Reports.Tracking
         private Activity CreateActivity(string name)
         {
             var newActivity = new Activity(name);
-
-            if (Activity.Current != null)
-            {
-                newActivity.SetParentId(Activity.Current.Id);
-            }
-            else
-            {
-                var parentId = RequestContext.Get(Constants.ParentActivityId)?.ToString();
-                if (!string.IsNullOrWhiteSpace(parentId))
-                {
-                    newActivity.SetParentId(parentId);
-                }
-            }
+            newActivity.SetParentId(Activity.Current.Id);
 
             var correlationId = RequestContext.Get(Constants.CorrelationId)?.ToString();
             if (!string.IsNullOrWhiteSpace(correlationId))
@@ -97,19 +112,6 @@ namespace Orleans.Dashboard.Reports.Tracking
             Activity.Current = newActivity;
 
             return newActivity;
-        }
-
-        private string GetGrainPrimaryKey(IOutgoingGrainCallContext context)
-        {
-            //TODO: Find a better way to figure out the key type
-            if (context.Grain is ISystemTarget) return string.Empty;
-            if (context.Grain is IGrainWithIntegerKey) return context.Grain.GetPrimaryKeyLong().ToString();
-            if (context.Grain is IGrainWithGuidKey) return context.Grain.GetPrimaryKey().ToString();
-            if (context.Grain is IGrainWithStringKey) return context.Grain.GetPrimaryKeyString();
-
-            //TODO: Deal with compount keys
-
-            return string.Empty;
         }
     }
 }

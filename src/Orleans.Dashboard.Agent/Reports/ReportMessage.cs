@@ -10,6 +10,7 @@ namespace Orleans.Dashboard.Reports
     {
         Log = 0,
         GrainMethodExecution = 1,
-        GrainMethodInvocation = 2
+        GrainMethodInvocation = 2,
+        ExternalDependencyTrack = 3
     }
 }

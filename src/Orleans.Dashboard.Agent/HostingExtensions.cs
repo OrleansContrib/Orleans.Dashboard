@@ -37,6 +37,7 @@ namespace Orleans.Dashboard
                     .AddSingleton<IAgentMessageWriter>(sp => sp.GetRequiredService<IAgentMessageBroker>())
                     .AddSingleton<IOutgoingGrainCallFilter, GrainMethodInvocationFilter>()
                     .AddSingleton<IIncomingGrainCallFilter, GrainMethodExecutionFilter>()
+                    .AddSingleton<IExternalDependencyTracker, ExternalDependencyTracker>()
                     .AddSingleton<AgentService>()
                     .AddSingleton<ILifecycleParticipant<ISiloLifecycle>>(sp =>
                         sp.GetRequiredService<AgentService>() as ILifecycleParticipant<ISiloLifecycle>);

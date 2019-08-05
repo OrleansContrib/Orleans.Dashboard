@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Orleans.Runtime;
 using System;
 using Microsoft.Extensions.Options;
@@ -9,13 +8,11 @@ namespace Orleans.Dashboard.Reports.Tracking
 {
     internal sealed class GrainMethodExecutionFilter : IIncomingGrainCallFilter
     {
-        private readonly ILogger _logger;
         private readonly IAgentMessageWriter _messageWriter;
         private readonly AgentTrackingOptions _options;
 
-        public GrainMethodExecutionFilter(ILoggerFactory loggerFactory, IOptions<AgentTrackingOptions> options, IAgentMessageWriter writer)
+        public GrainMethodExecutionFilter(IOptions<AgentTrackingOptions> options, IAgentMessageWriter writer)
         {
-            this._logger = loggerFactory.CreateLogger<GrainMethodExecutionFilter>();
             this._messageWriter = writer;
             this._options = options.Value;
         }
@@ -47,7 +44,7 @@ namespace Orleans.Dashboard.Reports.Tracking
                     .AddTag(Constants.ExceptionMessage, exc.Message)
                     .AddTag(Constants.ExceptionSource, exc.Source)
                     .AddTag(Constants.StackTrace, this._options.IncludeStackTrace ? exc.StackTrace : string.Empty);
-                throw exc;
+                throw;
             }
             finally
             {
@@ -69,8 +66,8 @@ namespace Orleans.Dashboard.Reports.Tracking
                 RequestContext.Set(Constants.RootActivityId, rootActivityId);
             }
             activity.AddTag(Constants.RootActivityId, rootActivityId);
-            activity.AddTag(Constants.ParentActivityId, activity.Id);
-            RequestContext.Set(Constants.ParentActivityId, activity.Id);
+            activity.AddTag(Constants.ParentActivityId, activity.ParentId);
+            RequestContext.Set(Constants.ParentActivityId, activity.ParentId);
             activity.Stop();
 
             return activity;
