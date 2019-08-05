@@ -72,8 +72,7 @@ namespace Orleans.Dashboard
 
         private Task Push(ReportMessage message)
         {
-            var agentMessage = this.CreateAgentMessage(message);
-            this._pendingMessages.Enqueue(agentMessage);
+            this.EnqueueMessage(message);
 
             if (this._pendingMessages.Count > 0 &&
                 (this._pendingMessages.Count >= this._agentOptions.MaxBatchSize ||
@@ -92,9 +91,9 @@ namespace Orleans.Dashboard
             return Task.CompletedTask;
         }
 
-        private AgentMessage CreateAgentMessage(ReportMessage message)
+        private void EnqueueMessage(ReportMessage message)
         {
-            return new AgentMessage
+            var agentMessage = new AgentMessage
             {
                 ClusterId = this._clusterOptions.ClusterId,
                 ServiceId = this._clusterOptions.ServiceId,
@@ -103,6 +102,8 @@ namespace Orleans.Dashboard
                 SiloName = this._siloDetails.Name,
                 DateTime = DateTime.UtcNow
             };
+
+            this._pendingMessages.Enqueue(agentMessage);
         }
 
         public void Participate(ISiloLifecycle lifecycle)

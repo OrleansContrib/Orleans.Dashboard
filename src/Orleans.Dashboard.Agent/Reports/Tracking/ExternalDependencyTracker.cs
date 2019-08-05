@@ -39,7 +39,7 @@ namespace Orleans.Dashboard.Reports.Tracking
                     .AddTag(Constants.ExceptionMessage, exc.Message)
                     .AddTag(Constants.ExceptionSource, exc.Source)
                     .AddTag(Constants.StackTrace, this._options.IncludeStackTrace ? exc.StackTrace : string.Empty);
-                throw exc;
+                throw;
             }
             finally
             {
@@ -47,7 +47,7 @@ namespace Orleans.Dashboard.Reports.Tracking
                 this._messageWriter.Write(new ReportMessage
                 {
                     Type = ReportMessageType.ExternalDependencyTrack,
-                    Payload = completedActivity
+                    Payload = TrackingMessage.FromActivity(completedActivity)
                 });
             }
 

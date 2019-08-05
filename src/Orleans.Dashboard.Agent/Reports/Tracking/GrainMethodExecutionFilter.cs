@@ -25,7 +25,7 @@ namespace Orleans.Dashboard.Reports.Tracking
             var grainKey = this.GetGrainPrimaryKey(context);
             var grainId = context.Grain.ToString();
 
-            var activity = CreateActivity($"{grainInterface}.{methodName}")
+            var activity = CreateActivity($"{grainImplementation}.{methodName}")
                 .AddTag(Constants.GrainInterface, grainInterface)
                 .AddTag(Constants.GrainImplementation, grainImplementation)
                 .AddTag(Constants.IsSystemTarget, string.IsNullOrWhiteSpace(grainKey).ToString())
@@ -52,7 +52,7 @@ namespace Orleans.Dashboard.Reports.Tracking
                 this._messageWriter.Write(new ReportMessage
                 {
                     Type = ReportMessageType.GrainMethodExecution,
-                    Payload = completedActivity
+                    Payload = TrackingMessage.FromActivity(completedActivity)
                 });
             }
         }

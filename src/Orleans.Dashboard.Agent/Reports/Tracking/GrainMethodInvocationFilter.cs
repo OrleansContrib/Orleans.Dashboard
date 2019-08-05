@@ -50,7 +50,7 @@ namespace Orleans.Dashboard.Reports.Tracking
                 this._messageWriter.Write(new ReportMessage
                 {
                     Type = ReportMessageType.GrainMethodInvocation,
-                    Payload = completedActivity
+                    Payload = TrackingMessage.FromActivity(completedActivity)
                 });
             }
         }
