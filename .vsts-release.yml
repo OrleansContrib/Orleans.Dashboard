@@ -1,0 +1,40 @@
+queue: 'Hosted VS2017'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+
+  - task: DotNetCoreInstaller@0
+    inputs:
+      packageType: 'sdk'
+      version: 3.0.100-preview7-012821
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: pack
+      packagesToPack: 'src/Orleans.Dashboard/*.csproj;src/Orleans.Dashboard.App/*.csproj;src/Orleans.Dashboard.Agent/*.csproj'
+      packDirectory: '$(build.artifactStagingDirectory)'
+      configuration: '$(buildConfiguration)'
+      versioningScheme: byEnvVar
+      versionEnvVar: Version
+
+  - task: NuGetCommand@2
+    inputs:
+      command: push
+      packagesToPush: '$(build.ArtifactStagingDirectory)/**/*.nupkg;!$(build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+      publishFeedCredentials: 'BlazorExtensions'
+      nuGetFeedType: external
+      versioningScheme: byEnvVar
+      versionEnvVar: Version
