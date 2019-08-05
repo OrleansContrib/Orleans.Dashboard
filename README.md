@@ -5,6 +5,7 @@
 
 [![Build Status](https://dotnet-ci.visualstudio.com/DotnetCI/_apis/build/status/Orleans-Dashboard-CI?branchName=master)](https://dotnet-ci.visualstudio.com/DotnetCI/_build/latest?definitionId=21&branchName=master)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dotnet/orleans?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![License](https://img.shields.io/github/license/OrleansContrib/Orleans.Dashboard.svg)](https://github.com/OrleansContrib/Orleans.Dashboard/blob/master/LICENSE)
 
 [Orleans](https://github.com/dotnet/orleans) is a framework that provides a straight-forward approach to building distributed high-scale computing applications, without the need to learn and apply complex concurrency or other scaling patterns. 
 
