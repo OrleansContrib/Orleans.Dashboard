@@ -24,7 +24,7 @@ steps:
   - task: DotNetCoreCLI@2
     inputs:
       command: pack
-      packagesToPack: 'src/Orleans.Dashboard/*.csproj;src/Orleans.Dashboard.App/*.csproj;src/Orleans.Dashboard.Agent/*.csproj'
+      packagesToPack: 'src/Orleans.Dashboard.Services/*.csproj;src/Orleans.Dashboard.App/*.csproj;src/Orleans.Dashboard.Agent/*.csproj'
       packDirectory: '$(build.artifactStagingDirectory)'
       configuration: '$(buildConfiguration)'
       versioningScheme: byEnvVar

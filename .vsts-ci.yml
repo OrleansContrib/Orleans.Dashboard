@@ -44,7 +44,7 @@ steps:
   - task: DotNetCoreCLI@2
     inputs:
       command: pack
-      packagesToPack: 'src/Orleans.Dashboard/*.csproj'
+      packagesToPack: 'src/Orleans.Dashboard.Services/*.csproj'
       configuration: '$(buildConfiguration)'
       versioningScheme: byPrereleaseNumber
       majorVersion: '0'
