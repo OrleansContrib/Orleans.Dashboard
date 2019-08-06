@@ -7,13 +7,6 @@
     <RootNamespace>Orleans.Dashboard</RootNamespace>
   </PropertyGroup>
 
-  <!-- <ItemGroup>
-    <None Include="wwwroot/**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </None>
-  </ItemGroup> -->
-
   <ItemGroup>
     <ProjectReference Include="..\Orleans.Dashboard.App\Orleans.Dashboard.App.csproj" />
   </ItemGroup>

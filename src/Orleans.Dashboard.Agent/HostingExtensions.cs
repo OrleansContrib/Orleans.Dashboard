@@ -16,39 +16,41 @@ namespace Orleans.Dashboard
             Action<AgentLoggerOptions> configureAgentLoggerOptions = null,
             Action<AgentTrackingOptions> configureAgentTrackingOptions = null)
         {
-            return builder.ConfigureServices((builderContext, services) =>
-            {
-                if (configureAgentOptions == null)
+            return builder
+                .ConfigureApplicationParts(parts => parts.AddFrameworkPart(typeof(IAgentGrain).Assembly))
+                .ConfigureServices((builderContext, services) =>
                 {
-                    configureAgentOptions = opt => { };
-                }
+                    if (configureAgentOptions == null)
+                    {
+                        configureAgentOptions = opt => { };
+                    }
 
-                if (configureAgentLoggerOptions == null)
-                {
-                    configureAgentLoggerOptions = opt => { };
-                }
+                    if (configureAgentLoggerOptions == null)
+                    {
+                        configureAgentLoggerOptions = opt => { };
+                    }
 
-                if (configureAgentTrackingOptions == null)
-                {
-                    configureAgentTrackingOptions = opt => { };
-                }
+                    if (configureAgentTrackingOptions == null)
+                    {
+                        configureAgentTrackingOptions = opt => { };
+                    }
 
-                services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, AgentLoggerProvider>());
+                    services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, AgentLoggerProvider>());
 
-                services
-                    .Configure(configureAgentOptions)
-                    .Configure(configureAgentLoggerOptions)
-                    .Configure(configureAgentTrackingOptions)
-                    .AddSingleton<IAgentMessageBroker, AgentMessageBroker>()
-                    .AddSingleton<IAgentMessageReader>(sp => sp.GetRequiredService<IAgentMessageBroker>())
-                    .AddSingleton<IAgentMessageWriter>(sp => sp.GetRequiredService<IAgentMessageBroker>())
-                    .AddSingleton<IOutgoingGrainCallFilter, GrainMethodInvocationFilter>()
-                    .AddSingleton<IIncomingGrainCallFilter, GrainMethodExecutionFilter>()
-                    .AddSingleton<IExternalDependencyTracker, ExternalDependencyTracker>()
-                    .AddSingleton<AgentService>()
-                    .AddSingleton<ILifecycleParticipant<ISiloLifecycle>>(sp =>
-                        sp.GetRequiredService<AgentService>() as ILifecycleParticipant<ISiloLifecycle>);
-            });
+                    services
+                        .Configure(configureAgentOptions)
+                        .Configure(configureAgentLoggerOptions)
+                        .Configure(configureAgentTrackingOptions)
+                        .AddSingleton<IAgentMessageBroker, AgentMessageBroker>()
+                        .AddSingleton<IAgentMessageReader>(sp => sp.GetRequiredService<IAgentMessageBroker>())
+                        .AddSingleton<IAgentMessageWriter>(sp => sp.GetRequiredService<IAgentMessageBroker>())
+                        .AddSingleton<IOutgoingGrainCallFilter, GrainMethodInvocationFilter>()
+                        .AddSingleton<IIncomingGrainCallFilter, GrainMethodExecutionFilter>()
+                        .AddSingleton<IExternalDependencyTracker, ExternalDependencyTracker>()
+                        .AddSingleton<AgentService>()
+                        .AddSingleton<ILifecycleParticipant<ISiloLifecycle>>(sp =>
+                            sp.GetRequiredService<AgentService>() as ILifecycleParticipant<ISiloLifecycle>);
+                });
         }
     }
 }

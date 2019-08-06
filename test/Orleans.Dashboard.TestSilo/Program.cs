@@ -37,6 +37,7 @@ namespace Orleans.Dashboard.TestSilo
                         })
                         .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(Program).Assembly))
                         .AddDashboardAgent()
+                        .AddDashboardServices()
                         .AddMemoryGrainStorage("PubSubStore")
                         .AddStartupTask<TestStart>()
                         .UseInMemoryReminderService()

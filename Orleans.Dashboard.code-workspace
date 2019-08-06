@@ -9,8 +9,12 @@
             "path": "src/Orleans.Dashboard.Agent"
         },
         {
+            "name": "Services",
+            "path": "src/Orleans.Dashboard.Services"
+        },
+        {
             "name": "Host",
-            "path": "src/Orleans.Dashboard"
+            "path": "src/Orleans.Dashboard.Host"
         },
         {
             "name": "TestSilo",

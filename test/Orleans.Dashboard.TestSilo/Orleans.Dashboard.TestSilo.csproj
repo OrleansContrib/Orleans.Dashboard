@@ -6,8 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Orleans.Dashboard/Orleans.Dashboard.csproj" />
+    <ProjectReference Include="../../src/Orleans.Dashboard.Host/Orleans.Dashboard.Host.csproj" />
     <ProjectReference Include="../../src/Orleans.Dashboard.Agent/Orleans.Dashboard.Agent.csproj" />
+    <ProjectReference Include="../../src/Orleans.Dashboard.Services/Orleans.Dashboard.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

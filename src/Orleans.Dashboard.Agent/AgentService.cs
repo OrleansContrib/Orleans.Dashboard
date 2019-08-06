@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Orleans.Concurrency;
 using Orleans.Configuration;
 using Orleans.Dashboard.Reports;
 using Orleans.Runtime;
@@ -19,6 +20,7 @@ namespace Orleans.Dashboard
         private readonly ClusterOptions _clusterOptions;
         private readonly AgentOptions _agentOptions;
         private readonly Queue<AgentMessage> _pendingMessages;
+        private readonly string _reporterGrainId;
         private ILogger _logger;
         private bool _disposing;
         private Task _messagePump;
@@ -41,6 +43,7 @@ namespace Orleans.Dashboard
             this._clusterOptions = clusterOptions.Value;
             this._agentOptions = agentOptions.Value;
             this._pendingMessages = new Queue<AgentMessage>();
+            this._reporterGrainId = $"{this._clusterOptions.ServiceId}|{this._clusterOptions.ClusterId}|{this._siloDetails.Name}";
         }
 
         private async Task RunReportMessagePump(CancellationToken cancellationToken)
@@ -70,7 +73,7 @@ namespace Orleans.Dashboard
             }
         }
 
-        private Task Push(ReportMessage message)
+        private async Task Push(ReportMessage message)
         {
             this.EnqueueMessage(message);
 
@@ -84,11 +87,10 @@ namespace Orleans.Dashboard
                     batch[i] = this._pendingMessages.Dequeue();
                 }
 
-                // TODO: Call dashboard grain to process batch
+                var reporter = this._grainFactory.GetGrain<IAgentGrain>(this._reporterGrainId);
+                await reporter.Report(batch.AsImmutable());
                 this._lastPush = DateTime.UtcNow;
             }
-
-            return Task.CompletedTask;
         }
 
         private void EnqueueMessage(ReportMessage message)
